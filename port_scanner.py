@@ -1,5 +1,6 @@
 import socket
 import sys
+from datetime import datetime
 
 if len(sys.argv) == 4:
     # Accept input with command line args
@@ -22,9 +23,9 @@ def port_scanner(host_ip, port_start, port_end):
             result = sock.connect_ex((host_ip, port))
             
             if result == 0:
-                print("Port {} is open".format(port))
+                print("[ " + str(datetime.now().strftime("%x %X")) + " ] " +  "Port {} is open".format(port))
             else:
-                print("Connection to port {} failed".format(port))
+                print("[ " + str(datetime.now().strftime("%x %X")) + " ] " +  "Connection to port {} failed".format(port))
     
     except:
         print("Unable to connect to host {} on port {}".format(host_ip, port))
