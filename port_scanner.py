@@ -2,6 +2,7 @@ import socket
 import sys
 from datetime import datetime
 import argparse
+import threading
 
 # CMD Arguement Parser
 def main():
@@ -63,8 +64,17 @@ def scan_single_port(host, port):
 def scan_port_range(host, port_start, port_end):
     print("[ " + str(datetime.now().strftime("%x %X")) + " ] " + f"Scanning ports {port_start}..{port_end} on {host}")
     
+    # Setup threads to improve performance
+    threads = []
+    
     for port in range(port_start, port_end+1):
-        scan_port(host, port)
+        thread = threading.Thread(target=scan_port, args=(host, port))
+        threads.append(thread)
+        thread.start()
+    
+    # Wait for all threads to complete
+    for t in threads:
+        t.join()
 
 if __name__ == "__main__": 
     main()
