@@ -1,39 +1,70 @@
 import socket
 import sys
 from datetime import datetime
+import argparse
 
-if len(sys.argv) == 4:
-    # Accept input with command line args
-    host_ip = str(sys.argv[1])
-    port_start = int(sys.argv[2])
-    port_end = int(sys.argv[3])
-else:
-    print("Invalid amount of Arguments")
-    sys.exit()
+# CMD Arguement Parser
+def main():
     
-# Function to scan individual host ports 
-def port_scanner(host_ip, port_start, port_end):
-    try:
-        for port in range(port_start, port_end+1):
-            # Create socket
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            socket.setdefaulttimeout(1) # set timeout for connection to ip so wont loop infinitely
+    parser = argparse.ArgumentParser(description="Port Scanner")
+    group = parser.add_mutually_exclusive_group()
+    parser.add_argument("host", help="Target host IP to scan")
+    group.add_argument("-p", "--port", type=int, default=0, help="Scan single port")
+    group.add_argument("-r", "--range", default='', help="Scan range of ports(e.g. 30-50)")
+    args = parser.parse_args()
+
+    host = str(args.host)
+    port = int(args.port)
+    port_range = str(args.range)
+    
+    if port != 0:
+        scan_single_port(host, port)
         
-            # Attempt a network connection
-            result = sock.connect_ex((host_ip, port))
-            
-            if result == 0:
-                print("[ " + str(datetime.now().strftime("%x %X")) + " ] " +  "Port {} is open".format(port))
-            else:
-                print("[ " + str(datetime.now().strftime("%x %X")) + " ] " +  "Connection to port {} failed".format(port))
+    elif port_range != '':
+        
+        if '-' in port_range:
+            port_start, port_end = map(int, port_range.split("-"))
+            scan_port_range(host, port_start, port_end)
+    
+    else:
+        pass
+    
+    
+# Scan port status
+def scan_port(host, port):
+    try:
+        # Create socket
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        socket.setdefaulttimeout(1) # set timeout for connection to ip so wont loop infinitely
+
+        # Attempt a network connection
+        conn = sock.connect_ex((host, port))
+        
+        if conn == 0:
+            print("[ " + str(datetime.now().strftime("%x %X")) + " ] " + f"Port {port}: OPEN")
+        else:
+            print("[ " + str(datetime.now().strftime("%x %X")) + " ] " + f"Port {port}: CLOSED")
     
     except:
-        print("Unable to connect to host {} on port {}".format(host_ip, port))
+        print(f"Unable to connect to host {host} on port {port}")
         sys.exit()
     
     finally:
         # Close the socket
         sock.close()
         
-        
-port_scanner(host_ip, port_start, port_end)
+
+# Scan single port
+def scan_single_port(host, port):
+    print("[ " + str(datetime.now().strftime("%x %X")) + " ] " + f"Scanning port {port} on {host}")
+    scan_port(host, port)
+
+# Scan range of ports
+def scan_port_range(host, port_start, port_end):
+    print("[ " + str(datetime.now().strftime("%x %X")) + " ] " + f"Scanning ports {port_start}..{port_end} on {host}")
+    
+    for port in range(port_start, port_end+1):
+        scan_port(host, port)
+
+if __name__ == "__main__": 
+    main()
